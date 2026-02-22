@@ -45,6 +45,17 @@
   "settingsGeneral": "General",
   "settingsAutoStart": "Auto Start",
   "settingsAutoStartDesc": "Automatically run this program when logging into the system",
+  "settingsAutoCloseOnConnected": "Auto Close On Connected",
+  "settingsAutoCloseOnConnectedDesc": "When Internet is available, start a 5-second countdown and close the app",
+  "autoCloseCountdownHint": "Internet is connected. App will close in {seconds}s",
+  "autoCloseCancelAction": "Cancel",
+  "@autoCloseCountdownHint": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   
   "settingsNetworkInterface": "Network Interface",
   "settingsNetworkInterfaceDesc": "Manually specify the authentication network interface",

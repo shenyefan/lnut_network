@@ -3,8 +3,29 @@ import 'package:logger/logger.dart';
 
 final logger = Logger();
 
+/// 由于 APP 未签名，使用该方法来临时避免 errSecMissingEntitlement (-34018).
+class _CompatMacOsOptions extends AppleOptions {
+  const _CompatMacOsOptions({
+    super.accountName,
+    super.groupId,
+    super.accessibility,
+    super.synchronizable,
+    this.useDataProtectionKeyChain = false,
+  });
+
+  final bool useDataProtectionKeyChain;
+
+  @override
+  Map<String, String> toMap() => <String, String>{
+        ...super.toMap(),
+        'useDataProtectionKeyChain': '$useDataProtectionKeyChain',
+      };
+}
+
 class ConfigManager {
-  static const _storage = FlutterSecureStorage();
+  static const _storage = FlutterSecureStorage(
+    mOptions: _CompatMacOsOptions(useDataProtectionKeyChain: false),
+  );
 
   /// 加载保存的凭证和状态
   Future<Map<String, dynamic>> loadCredentials() async {
@@ -12,12 +33,15 @@ class ConfigManager {
     final password = await _storage.read(key: 'password') ?? '';
     final autoLoginStr = await _storage.read(key: 'autoLogin') ?? 'false';
     final autoLogin = autoLoginStr == 'true';
+    final autoCloseOnConnectedStr = await _storage.read(key: 'autoCloseOnConnected') ?? 'false';
+    final autoCloseOnConnected = autoCloseOnConnectedStr == 'true';
     final preferredInterface = await _storage.read(key: 'preferredInterface') ?? '';
 
     return {
       'username': username,
       'password': password,
       'autoLogin': autoLogin,
+      'autoCloseOnConnected': autoCloseOnConnected,
       'preferredInterface': preferredInterface,
     };
   }
@@ -34,5 +58,11 @@ class ConfigManager {
   Future<void> savePreferredInterface(String interfaceName) async {
     await _storage.write(key: 'preferredInterface', value: interfaceName);
     logger.i("已保存首选网卡: $interfaceName");
+  }
+
+  /// 保存连接成功后自动关闭状态
+  Future<void> saveAutoCloseOnConnected(bool enabled) async {
+    await _storage.write(key: 'autoCloseOnConnected', value: enabled ? 'true' : 'false');
+    logger.i("已保存连接成功后自动关闭状态: $enabled");
   }
 }

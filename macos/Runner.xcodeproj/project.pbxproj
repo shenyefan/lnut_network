@@ -573,16 +573,17 @@
 			};
 			name = Profile;
 		};
-		338D0CEA231458BD00FA5F75 /* Profile */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = Runner/Info.plist;
+			338D0CEA231458BD00FA5F75 /* Profile */ = {
+				isa = XCBuildConfiguration;
+				baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CLANG_ENABLE_MODULES = YES;
+					CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
+					CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
+					CODE_SIGN_STYLE = Automatic;
+					COMBINE_HIDPI_IMAGES = YES;
+					INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -705,16 +706,17 @@
 			};
 			name = Release;
 		};
-		33CC10FC2044A3C60003C045 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = Runner/Info.plist;
+			33CC10FC2044A3C60003C045 /* Debug */ = {
+				isa = XCBuildConfiguration;
+				baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CLANG_ENABLE_MODULES = YES;
+					CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
+					CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
+					CODE_SIGN_STYLE = Automatic;
+					COMBINE_HIDPI_IMAGES = YES;
+					INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -725,16 +727,17 @@
 			};
 			name = Debug;
 		};
-		33CC10FD2044A3C60003C045 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				INFOPLIST_FILE = Runner/Info.plist;
+			33CC10FD2044A3C60003C045 /* Release */ = {
+				isa = XCBuildConfiguration;
+				baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CLANG_ENABLE_MODULES = YES;
+					CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION = YES;
+					CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
+					CODE_SIGN_STYLE = Automatic;
+					COMBINE_HIDPI_IMAGES = YES;
+					INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

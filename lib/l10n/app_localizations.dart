@@ -320,6 +320,30 @@ abstract class AppLocalizations {
   /// **'登录系统时自动运行本程序'**
   String get settingsAutoStartDesc;
 
+  /// No description provided for @settingsAutoCloseOnConnected.
+  ///
+  /// In zh, this message translates to:
+  /// **'连接成功后自动关闭'**
+  String get settingsAutoCloseOnConnected;
+
+  /// No description provided for @settingsAutoCloseOnConnectedDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'检测到外网可用后，5 秒倒计时并自动关闭程序'**
+  String get settingsAutoCloseOnConnectedDesc;
+
+  /// No description provided for @autoCloseCountdownHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'已连接到外网，将在 {seconds} 秒后自动关闭程序'**
+  String autoCloseCountdownHint(int seconds);
+
+  /// No description provided for @autoCloseCancelAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get autoCloseCancelAction;
+
   /// No description provided for @settingsNetworkInterface.
   ///
   /// In zh, this message translates to:

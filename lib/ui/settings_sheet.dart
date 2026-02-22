@@ -18,6 +18,8 @@ class SettingsSheet {
     required AppState appState,
     required bool autoStartEnabled,
     required ValueChanged<bool> onAutoStartChanged,
+    required bool autoCloseOnConnected,
+    required ValueChanged<bool> onAutoCloseOnConnectedChanged,
   }) async {
     final interfaces = await NetworkUtils.getAllInterfaces();
     if (!context.mounted) return;
@@ -28,6 +30,7 @@ class SettingsSheet {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         bool localAutoStart = autoStartEnabled;
+        bool localAutoCloseOnConnected = autoCloseOnConnected;
         final l10n = AppLocalizations.of(context)!;
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
@@ -101,6 +104,47 @@ class SettingsSheet {
                                       }
                                       localAutoStart = v;
                                       onAutoStartChanged(v);
+                                      setSheetState(() {});
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Divider(height: 1, color: Colors.white.withValues(alpha: 0.06), indent: 24, endIndent: 24),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            final newVal = !localAutoCloseOnConnected;
+                            localAutoCloseOnConnected = newVal;
+                            onAutoCloseOnConnectedChanged(newVal);
+                            setSheetState(() {});
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(l10n.settingsAutoCloseOnConnected, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
+                                      const SizedBox(height: 2),
+                                      Text(l10n.settingsAutoCloseOnConnectedDesc, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35))),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: 24,
+                                  child: Switch(
+                                    value: localAutoCloseOnConnected,
+                                    activeThumbColor: const Color(0xFF5B8DEF),
+                                    onChanged: (v) {
+                                      localAutoCloseOnConnected = v;
+                                      onAutoCloseOnConnectedChanged(v);
                                       setSheetState(() {});
                                     },
                                   ),

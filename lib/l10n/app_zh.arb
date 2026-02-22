@@ -45,6 +45,17 @@
   "settingsGeneral": "通用",
   "settingsAutoStart": "开机自启动",
   "settingsAutoStartDesc": "登录系统时自动运行本程序",
+  "settingsAutoCloseOnConnected": "连接成功后自动关闭",
+  "settingsAutoCloseOnConnectedDesc": "检测到外网可用后，5 秒倒计时并自动关闭程序",
+  "autoCloseCountdownHint": "已连接到外网，将在 {seconds} 秒后自动关闭程序",
+  "autoCloseCancelAction": "取消",
+  "@autoCloseCountdownHint": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   
   "settingsNetworkInterface": "网络接口",
   "settingsNetworkInterfaceDesc": "手动指定认证网络出口",

@@ -120,6 +120,20 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAutoStartDesc => '登录系统时自动运行本程序';
 
   @override
+  String get settingsAutoCloseOnConnected => '连接成功后自动关闭';
+
+  @override
+  String get settingsAutoCloseOnConnectedDesc => '检测到外网可用后，5 秒倒计时并自动关闭程序';
+
+  @override
+  String autoCloseCountdownHint(int seconds) {
+    return '已连接到外网，将在 $seconds 秒后自动关闭程序';
+  }
+
+  @override
+  String get autoCloseCancelAction => '取消';
+
+  @override
   String get settingsNetworkInterface => '网络接口';
 
   @override

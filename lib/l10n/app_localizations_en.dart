@@ -124,6 +124,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatically run this program when logging into the system';
 
   @override
+  String get settingsAutoCloseOnConnected => 'Auto Close On Connected';
+
+  @override
+  String get settingsAutoCloseOnConnectedDesc =>
+      'When Internet is available, start a 5-second countdown and close the app';
+
+  @override
+  String autoCloseCountdownHint(int seconds) {
+    return 'Internet is connected. App will close in ${seconds}s';
+  }
+
+  @override
+  String get autoCloseCancelAction => 'Cancel';
+
+  @override
   String get settingsNetworkInterface => 'Network Interface';
 
   @override

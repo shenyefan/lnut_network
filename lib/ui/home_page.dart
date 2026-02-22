@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -25,15 +26,28 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool _autoStart = false;
+  bool _autoCloseOnConnected = false;
+  bool _autoCloseCancelledByUser = false;
+  Timer? _autoCloseTimer;
+  int _autoCloseSecondsLeft = 0;
 
   @override
   void initState() {
     super.initState();
+    _autoCloseOnConnected = widget.appState.autoCloseOnConnected;
+    widget.appState.addListener(_onAppStateChanged);
     if (isDesktop) {
       launchAtStartup.isEnabled().then((v) {
         if (mounted) setState(() => _autoStart = v);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    widget.appState.removeListener(_onAppStateChanged);
+    _cancelAutoCloseCountdown(updateUi: false);
+    super.dispose();
   }
 
   @override
@@ -59,6 +73,8 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 children: [
                   _buildTitleBar(context),
+                  if (isDesktop && _autoCloseOnConnected && _autoCloseSecondsLeft > 0)
+                    _buildAutoCloseBanner(context),
                   // 全局错误横幅
                   if (widget.appState.errorMessage.isNotEmpty &&
                       widget.appState.status != AppNetworkStatus.loginFailed)
@@ -79,6 +95,116 @@ class _HomePageState extends State<HomePage> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  void _onAppStateChanged() {
+    if (!mounted) return;
+
+    final bool nextAutoClose = widget.appState.autoCloseOnConnected;
+    if (_autoCloseOnConnected != nextAutoClose) {
+      setState(() => _autoCloseOnConnected = nextAutoClose);
+    }
+
+    final bool connectedToInternet = widget.appState.status == AppNetworkStatus.connectedCampus ||
+        widget.appState.status == AppNetworkStatus.connectedExternal;
+
+    if (isDesktop && nextAutoClose && connectedToInternet && !_autoCloseCancelledByUser) {
+      if (_autoCloseTimer == null) {
+        _startAutoCloseCountdown();
+      }
+      return;
+    }
+
+    if (!connectedToInternet || !nextAutoClose) {
+      _autoCloseCancelledByUser = false;
+    }
+    _cancelAutoCloseCountdown();
+  }
+
+  void _startAutoCloseCountdown() {
+    _autoCloseCancelledByUser = false;
+    _autoCloseSecondsLeft = 5;
+    setState(() {});
+    _autoCloseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_autoCloseSecondsLeft <= 1) {
+        timer.cancel();
+        _autoCloseTimer = null;
+        setState(() => _autoCloseSecondsLeft = 0);
+        _closeDesktopApp();
+        return;
+      }
+
+      setState(() => _autoCloseSecondsLeft -= 1);
+    });
+  }
+
+  void _cancelAutoCloseCountdown({bool updateUi = true}) {
+    _autoCloseTimer?.cancel();
+    _autoCloseTimer = null;
+    if (_autoCloseSecondsLeft == 0) return;
+    if (!updateUi || !mounted) {
+      _autoCloseSecondsLeft = 0;
+      return;
+    }
+    setState(() => _autoCloseSecondsLeft = 0);
+  }
+
+  void _cancelAutoCloseByUser() {
+    _autoCloseCancelledByUser = true;
+    _cancelAutoCloseCountdown();
+  }
+
+  Future<void> _closeDesktopApp() async {
+    try {
+      await windowManager.close();
+    } catch (_) {
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        exit(0);
+      }
+    }
+  }
+
+  Widget _buildAutoCloseBanner(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(36, 0, 36, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFBBF24).withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFFBBF24).withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.timer_outlined, size: 16, color: const Color(0xFFFBBF24).withValues(alpha: 0.95)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l10n.autoCloseCountdownHint(_autoCloseSecondsLeft),
+                style: TextStyle(fontSize: 12, color: const Color(0xFFFBBF24).withValues(alpha: 0.95)),
+              ),
+            ),
+            TextButton(
+              onPressed: _cancelAutoCloseByUser,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFFBBF24).withValues(alpha: 0.98),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: const Size(0, 0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              child: Text(l10n.autoCloseCancelAction),
+            ),
+          ],
         ),
       ),
     );
@@ -288,6 +414,18 @@ class _HomePageState extends State<HomePage> {
       appState: widget.appState,
       autoStartEnabled: _autoStart,
       onAutoStartChanged: (v) => setState(() => _autoStart = v),
+      autoCloseOnConnected: _autoCloseOnConnected,
+      onAutoCloseOnConnectedChanged: (v) {
+        setState(() => _autoCloseOnConnected = v);
+        widget.appState.saveAutoCloseOnConnected(v);
+        if (!v) {
+          _autoCloseCancelledByUser = false;
+          _cancelAutoCloseCountdown();
+          return;
+        }
+        _autoCloseCancelledByUser = false;
+        _onAppStateChanged();
+      },
     );
   }
 }

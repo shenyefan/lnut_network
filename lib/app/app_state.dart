@@ -24,6 +24,7 @@ class AppState extends ChangeNotifier {
   String savedUsername = '';
   String savedPassword = '';
   bool isAutoLogin = false;
+  bool autoCloseOnConnected = false;
   String preferredInterface = '';
   
   bool isLoggingIn = false;
@@ -43,6 +44,7 @@ class AppState extends ChangeNotifier {
     savedUsername = credentials['username'] ?? '';
     savedPassword = credentials['password'] ?? '';
     isAutoLogin = credentials['autoLogin'] ?? false;
+    autoCloseOnConnected = credentials['autoCloseOnConnected'] ?? false;
     preferredInterface = credentials['preferredInterface'] ?? '';
     notifyListeners();
   }
@@ -60,6 +62,12 @@ class AppState extends ChangeNotifier {
     await _configManager.savePreferredInterface(interfaceName);
     notifyListeners();
     await checkNetworkStatus();
+  }
+
+  Future<void> saveAutoCloseOnConnected(bool enabled) async {
+    autoCloseOnConnected = enabled;
+    await _configManager.saveAutoCloseOnConnected(enabled);
+    notifyListeners();
   }
 
   Future<void> checkNetworkStatus() async {
