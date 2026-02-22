@@ -9,6 +9,9 @@ class MainFlutterWindow: NSWindow {
     self.contentViewController = flutterViewController
     self.setFrame(windowFrame, display: true)
 
+    // Let Flutter content extend into the title bar area, so custom title row
+    // aligns with macOS traffic-light buttons.
+    self.styleMask.insert(.fullSizeContentView)
     self.titleVisibility = .hidden
     self.titlebarAppearsTransparent = true
     self.isMovableByWindowBackground = true

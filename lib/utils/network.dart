@@ -6,6 +6,12 @@ final logger = Logger();
 
 class NetworkUtils {
   static const _physicalKeywords = ['wlan', 'wi-fi', 'wifi', 'ethernet', '以太网', 'en0', 'en1', 'eth0', 'eth1', 'wlan0'];
+  static const _connectivityEndpoints = [
+    'https://cp.cloudflare.com/generate_204',
+    'https://www.gstatic.com/generate_204',
+    'https://connect.rom.miui.com/generate_204',
+    'http://connect.rom.miui.com/generate_204',
+  ];
 
   /// 获取所有可用网卡及其 IPv4 地址列表
   static Future<Map<String, List<String>>> getAllInterfaces() async {
@@ -58,17 +64,30 @@ class NetworkUtils {
 
   /// 204 测试
   static Future<bool> isNetworkConnected() async {
+    final client = http.Client();
     try {
-      final uri = Uri.parse('http://connect.rom.miui.com/generate_204');
-      final response = await http.get(uri).timeout(const Duration(seconds: 3));
-      
-      if (response.statusCode == 204) return true;
-      
-      logger.w("网络未连接（${response.statusCode}）");
+      for (final endpoint in _connectivityEndpoints) {
+        try {
+          final uri = Uri.parse(endpoint);
+          final response = await client.get(uri).timeout(const Duration(seconds: 3));
+
+          if (response.statusCode >= 200 && response.statusCode < 400) {
+            return true;
+          }
+
+          logger.w("连通性检测失败 [$endpoint]（${response.statusCode}）");
+        } catch (e) {
+          logger.w("连通性检测异常 [$endpoint]: $e");
+          if (Platform.isMacOS && e.toString().contains('Operation not permitted')) {
+            logger.w("macOS 沙盒可能缺少网络客户端权限（com.apple.security.network.client）");
+          }
+        }
+      }
+
+      logger.e("外网连通性测试全部失败");
       return false;
-    } catch (e) {
-      logger.e("外网连通性测试异常: $e");
-      return false;
+    } finally {
+      client.close();
     }
   }
 
@@ -105,4 +124,3 @@ class NetworkUtils {
     }
   }
 }
-

@@ -87,16 +87,18 @@ class _HomePageState extends State<HomePage> {
   // ── 标题栏 ──
 
   Widget _buildTitleBar(BuildContext context) {
+    final bool isMac = !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
+    final double titleBarHeight = isDesktop ? (isMac ? 34 : 48) : 0;
     return GestureDetector(
       onPanStart: isDesktop ? (_) => windowManager.startDragging() : null,
       child: Container(
-        height: isDesktop ? 48 : 0,
+        height: titleBarHeight,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: isDesktop
             ? Row(
                 children: [
                   // macOS 下为左侧交通灯预留空间
-                  if (Platform.isMacOS) const SizedBox(width: 76),
+                  if (Platform.isMacOS) const SizedBox(width: 72),
                   if (!Platform.isMacOS) const SizedBox(width: 10),
                   Text(
                     AppLocalizations.of(context)!.appTitle,
