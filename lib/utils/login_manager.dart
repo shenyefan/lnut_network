@@ -31,22 +31,22 @@ class LoginManager {
       final recMessage = decoded["rec"]?.toString() ?? "未知错误";
 
       if (code == "200") {
-        return (true, "登录成功");
+        return (true, "success");
       } else if (code == "199") {
-        return (false, "参数错误");
+        return (false, "errorInvalidParams");
       } else if (code == "202") {
-        return (false, "帐号不存在");
+        return (false, "errorAccountNotFound");
       } else if (code == "203") {
-        return (false, "密码错误");
+        return (false, "errorPasswordIncorrect");
       } else if (code == "205") {
-        return (false, "帐号不存在");
+        return (false, "errorAccountNotFound");
       } else if (code == "213") {
-        return (false, "密码错误");
+        return (false, "errorPasswordIncorrect");
       } else {
         return (false, recMessage);
       }
     } catch (e) {
-      return (false, "请求失败: $e");
+      return (false, "$e");
     }
   }
 
@@ -56,12 +56,12 @@ class LoginManager {
     try {
       final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 1));
       if (response.statusCode == 200) {
-        return (true, "下线成功");
+        return (true, "success");
       } else {
-        return (false, "HTTP状态码: ${response.statusCode}");
+        return (false, "errorLoggedOutFailed");
       }
     } catch (e) {
-      return (false, "请求失败: $e");
+      return (false, "$e");
     }
   }
 }

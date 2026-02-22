@@ -1,0 +1,54 @@
+{
+  "@@locale": "en",
+  "appTitle": "LNUT Network Authentication",
+  "errorConnecting": "Network environment error",
+  "errorInvalidParams": "Invalid parameters",
+  "errorAccountNotFound": "Account not found",
+  "errorPasswordIncorrect": "Incorrect password",
+  "errorUnknown": "Unknown error",
+  "errorLoggedOutFailed": "Failed to log out",
+  "errorPingTestFailed": "Failed to connect to Internet",
+  "errorNoUsernamePassword": "Username and password required",
+  
+  "checkingNetwork": "Checking network environment...",
+  "statusChecking": "Checking",
+  "statusCheckingMin": "Checking...",
+  
+  "statusConnectedCampus": "Connected",
+  "statusConnectedCampusDesc": "Campus network authenticated, Internet is available",
+  "statusConnectedCampusMin": "Campus network authenticated",
+  "actionDisconnect": "Disconnect",
+  
+  "statusConnectedExternal": "Network Connected",
+  "statusConnectedExternalDesc": "Not in campus network, authentication not required",
+  "statusConnectedExternalMin": "External network environment",
+  "actionRecheck": "Recheck",
+  
+  "statusWaitingLoginMin": "Waiting for login",
+  "statusAutoLoggingInMin": "Auto-logging in...",
+
+  "statusNoNetwork": "No Network",
+  "statusNoNetworkDesc": "Please check your network connection and try again",
+  "statusNoNetworkMin": "No network connection",
+  
+  "loginSubtitle": "Login to connect to the Internet",
+  "loginUsernameHint": "Student ID",
+  "loginPasswordHint": "Password",
+  "loginAutoLogin": "Auto login",
+  "loginButton": "Login",
+  "loginButtonLoggingIn": "Logging in...",
+  "loginSuccess": "Login successful",
+  
+  "logoutLoggingOut": "Logging out...",
+  "logoutSuccess": "Logged out",
+  
+  "settingsGeneral": "General",
+  "settingsAutoStart": "Auto Start",
+  "settingsAutoStartDesc": "Automatically run this program when logging into the system",
+  
+  "settingsNetworkInterface": "Network Interface",
+  "settingsNetworkInterfaceDesc": "Manually specify the authentication network interface",
+  
+  "interfaceAutoDetect": "Auto Detect",
+  "interfaceAutoDetectDesc": "Recommended · Prefer physical network card"
+}

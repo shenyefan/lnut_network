@@ -1,66 +1,108 @@
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:logger/logger.dart';
 
 final logger = Logger();
 
 class NetworkUtils {
-  /// 获取本机的有效 WiFi IP 地址或者网络接口 IP，失败返回 null
-  static Future<String?> getIpAddress() async {
+  static const _physicalKeywords = ['wlan', 'wi-fi', 'wifi', 'ethernet', '以太网', 'en0', 'en1', 'eth0', 'eth1', 'wlan0'];
+
+  /// 获取所有可用网卡及其 IPv4 地址列表
+  static Future<Map<String, List<String>>> getAllInterfaces() async {
     try {
-      final info = NetworkInfo();
-      String? wifiIP = await info.getWifiIP();
-      if (wifiIP != null && wifiIP.isNotEmpty) {
-        logger.i("WiFi IP: $wifiIP");
-        return wifiIP;
+      final interfaces = await NetworkInterface.list(includeLinkLocal: false, type: InternetAddressType.IPv4);
+      return Map.fromEntries(
+        interfaces.map((iface) => MapEntry(
+              iface.name,
+              iface.addresses.where((addr) => !addr.isLoopback).map((a) => a.address).toList(),
+            ))
+            .where((entry) => entry.value.isNotEmpty),
+      );
+    } catch (e) {
+      logger.e("获取网卡列表失败: $e");
+      return {};
+    }
+  }
+
+  /// 获取本机的有效局域网 IP 地址
+  static Future<String?> getIpAddress({String preferredInterface = ''}) async {
+    try {
+      final allInterfaces = await getAllInterfaces();
+      if (allInterfaces.isEmpty) return null;
+
+      // 手动指定网卡
+      if (preferredInterface.isNotEmpty && allInterfaces.containsKey(preferredInterface)) {
+        final ip = allInterfaces[preferredInterface]!.first;
+        logger.i("指定网卡 [$preferredInterface]: $ip");
+        return ip;
       }
-      
-      for (var interface in await NetworkInterface.list()) {
-        for (var addr in interface.addresses) {
-          if (addr.type == InternetAddressType.IPv4 && !addr.isLoopback) {
-            logger.i("Network IP: ${addr.address}");
-            return addr.address;
-          }
+
+      // 匹配物理网卡
+      for (final entry in allInterfaces.entries) {
+        final nameLower = entry.key.toLowerCase();
+        if (_physicalKeywords.any((k) => nameLower.contains(k))) {
+          logger.i("物理网卡 [${entry.key}]: ${entry.value.first}");
+          return entry.value.first;
         }
       }
-      return null;
+
+      // 兜底
+      final fallback = allInterfaces.entries.first;
+      logger.i("未匹配指定或物理网卡，使用网卡 [${fallback.key}]: ${fallback.value.first}");
+      return fallback.value.first;
     } catch (e) {
-      logger.e("获取IP地址失败: $e");
+      logger.e("获取本机 IP 地址失败: $e");
       return null;
     }
   }
 
-  /// 检查网络连接是否正常
+  /// 204 测试
   static Future<bool> isNetworkConnected() async {
     try {
-      final response = await http.get(Uri.parse('https://www.gstatic.com/generate_204')).timeout(const Duration(seconds: 3));
-      if (response.statusCode == 204) {
-        return true;
-      } else {
-        logger.w("网络未连接，HTTP状态码: ${response.statusCode}");
-        return false;
-      }
+      final uri = Uri.parse('http://connect.rom.miui.com/generate_204');
+      final response = await http.get(uri).timeout(const Duration(seconds: 3));
+      
+      if (response.statusCode == 204) return true;
+      
+      logger.w("网络未连接（${response.statusCode}）");
+      return false;
     } catch (e) {
-      logger.e("网络请求异常: $e");
+      logger.e("外网连通性测试异常: $e");
       return false;
     }
   }
 
-  /// 执行Ping测试
-  static Future<bool> pingTest(String target, {int timeoutSeconds = 2}) async {
-    bool success = false;
-    for (int i = 0; i < 5; i++) {
-      try {
-        final socket = await Socket.connect(target, 80, timeout: Duration(seconds: timeoutSeconds));
-        socket.destroy();
-        logger.i("第 ${i + 1} 次 Ping $target 成功");
-        success = true;
-        break;
-      } catch (e) {
-        logger.e("第 ${i + 1} 次 Ping $target 失败: $e");
+  /// 校园网检测 
+  static Future<bool> pingTest(String targetIp, {int timeoutSeconds = 2}) async {
+    try {
+      ProcessResult result;
+
+      if (Platform.isWindows) {
+        // Windows
+        result = await Process.run(
+          'ping', ['-n', '1', '-w', '${timeoutSeconds * 1000}', targetIp],
+          stdoutEncoding: systemEncoding,
+          stderrEncoding: systemEncoding,
+        );
+      } else {
+        // macOS / Linux / Android
+        result = await Process.run(
+          'ping', ['-c', '1', '-W', '$timeoutSeconds', targetIp],
+        );
       }
+
+      final output = result.stdout.toString().toLowerCase();
+      if (result.exitCode == 0 && output.contains('ttl=')) {
+        logger.i("Ping $targetIp 成功");
+        return true;
+      } else {
+        logger.w("Ping $targetIp 失败 (exitCode=${result.exitCode})");
+        return false;
+      }
+    } catch (e) {
+      logger.e("Ping 执行失败: $e");
+      return false;
     }
-    return success;
   }
 }
+

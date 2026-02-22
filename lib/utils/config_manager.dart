@@ -12,11 +12,13 @@ class ConfigManager {
     final password = await _storage.read(key: 'password') ?? '';
     final autoLoginStr = await _storage.read(key: 'autoLogin') ?? 'false';
     final autoLogin = autoLoginStr == 'true';
+    final preferredInterface = await _storage.read(key: 'preferredInterface') ?? '';
 
     return {
       'username': username,
       'password': password,
       'autoLogin': autoLogin,
+      'preferredInterface': preferredInterface,
     };
   }
 
@@ -26,5 +28,11 @@ class ConfigManager {
     await _storage.write(key: 'password', value: password);
     await _storage.write(key: 'autoLogin', value: autoLogin ? 'true' : 'false');
     logger.i("已保存用户名: $username, 自动登录状态: $autoLogin");
+  }
+
+  /// 保存用户首选的网卡名称
+  Future<void> savePreferredInterface(String interfaceName) async {
+    await _storage.write(key: 'preferredInterface', value: interfaceName);
+    logger.i("已保存首选网卡: $interfaceName");
   }
 }

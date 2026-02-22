@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="lnut_network"
+        android:label="校园网认证"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

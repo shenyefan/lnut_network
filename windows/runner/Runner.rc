@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "lnut_network" "\0"
+            VALUE "CompanyName", "net.moenya" "\0"
+            VALUE "FileDescription", "LNUT Network Authentication" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "lnut_network" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "lnut_network.exe" "\0"
-            VALUE "ProductName", "lnut_network" "\0"
+            VALUE "InternalName", "lnut_network_auth" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Moenya. All rights reserved." "\0"
+            VALUE "OriginalFilename", "校园网认证.exe" "\0"
+            VALUE "ProductName", "LNUT Network Authentication" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

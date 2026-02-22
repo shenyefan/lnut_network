@@ -1,5 +1,5 @@
 name: lnut_network
-description: "A new Flutter project."
+description: "LNUT Network Authentication"
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -9,15 +9,36 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   flutter_secure_storage: ^10.0.0
   http: ^1.6.0
   logger: ^2.6.2
   network_info_plus: ^7.0.0
+  tdesign_flutter: ^0.2.7
+  window_manager: ^0.5.1
+  launch_at_startup: ^0.3.1
+  package_info_plus: ^8.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+  generate: true
+  fonts:
+    - family: HarmonyOS Sans
+      fonts:
+        - asset: assets/fonts/HarmonyOS_Sans_SC_Regular.ttf
+
+flutter_launcher_icons:
+  android: true
+  windows:
+    generate: true
+    image_path: "assets/logo.png"
+    icon_size: 256
+  image_path: "assets/logo.png"
