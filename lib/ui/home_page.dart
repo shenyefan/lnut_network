@@ -10,7 +10,10 @@ import 'settings_sheet.dart';
 import 'package:lnut_network/l10n/app_localizations.dart';
 
 bool get isDesktop =>
-    !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS);
 
 class HomePage extends StatefulWidget {
   final AppState appState;
@@ -92,7 +95,9 @@ class _HomePageState extends State<HomePage> {
         child: isDesktop
             ? Row(
                 children: [
-                  const SizedBox(width: 10),
+                  // macOS 下为左侧交通灯预留空间
+                  if (Platform.isMacOS) const SizedBox(width: 76),
+                  if (!Platform.isMacOS) const SizedBox(width: 10),
                   Text(
                     AppLocalizations.of(context)!.appTitle,
                     style: TextStyle(
@@ -104,9 +109,11 @@ class _HomePageState extends State<HomePage> {
                   const Spacer(),
                   _titleBarBtn(Icons.settings_outlined, () => _openSettings(), Colors.white.withValues(alpha: 0.5)),
                   const SizedBox(width: 4),
-                  _titleBarBtn(Icons.remove_rounded, () => windowManager.minimize(), Colors.white.withValues(alpha: 0.5)),
-                  const SizedBox(width: 4),
-                  _titleBarBtn(Icons.close_rounded, () => windowManager.close(), const Color(0xFFE81123)),
+                  if (!Platform.isMacOS) ...[
+                    _titleBarBtn(Icons.remove_rounded, () => windowManager.minimize(), Colors.white.withValues(alpha: 0.5)),
+                    const SizedBox(width: 4),
+                    _titleBarBtn(Icons.close_rounded, () => windowManager.close(), const Color(0xFFE81123)),
+                  ],
                 ],
               )
             : const SizedBox.shrink(),

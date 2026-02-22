@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
@@ -7,7 +6,10 @@ import '../app/app_state.dart';
 import '../utils/network.dart';
 
 bool get _isDesktop =>
-    !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS);
 
 class SettingsSheet {
   /// 显示设置面板
@@ -90,7 +92,7 @@ class SettingsSheet {
                                   height: 24,
                                   child: Switch(
                                     value: localAutoStart,
-                                    activeColor: const Color(0xFF5B8DEF),
+                                    activeThumbColor: const Color(0xFF5B8DEF),
                                     onChanged: (v) async {
                                       if (v) {
                                         await launchAtStartup.enable();

@@ -23,8 +23,6 @@ class LoginManager {
         body: data,
       ).timeout(const Duration(seconds: 3));
 
-      print(response.body);
-
       // JSON 响应解析
       final decoded = jsonDecode(response.body);
       final code = decoded["reccode"]?.toString() ?? "-1";
