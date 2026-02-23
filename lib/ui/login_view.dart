@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:lnut_network/l10n/app_localizations.dart';
 import '../app/app_state.dart';
 import 'widgets/dark_input.dart';
@@ -86,6 +87,7 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     final state = widget.appState;
     final l10n = AppLocalizations.of(context)!;
+    final bool isMac = !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
     final error = _translateError(context, _displayError);
 
     return Column(
@@ -105,13 +107,15 @@ class _LoginViewState extends State<LoginView> {
             child: const Icon(Icons.person_outline_rounded, size: 32, color: Color(0xFF5B8DEF)),
           ),
         ),
-        const SizedBox(height: 28),
-        Text(
-          l10n.appTitle,
-          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 6),
+        SizedBox(height: isMac ? 14 : 28),
+        if (!isMac) ...[
+          Text(
+            l10n.appTitle,
+            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+        ],
         Text(
           l10n.loginSubtitle,
           style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.4)),

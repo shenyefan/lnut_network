@@ -223,21 +223,21 @@ class _HomePageState extends State<HomePage> {
         child: isDesktop
             ? Row(
                 children: [
-                  // macOS 下为左侧交通灯预留空间
-                  if (Platform.isMacOS) const SizedBox(width: 72),
-                  if (!Platform.isMacOS) const SizedBox(width: 10),
-                  Text(
-                    AppLocalizations.of(context)!.appTitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w500,
+                  if (!isMac) ...[
+                    const SizedBox(width: 10),
+                    Text(
+                      AppLocalizations.of(context)!.appTitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
+                  ],
                   const Spacer(),
-                  _titleBarBtn(Icons.settings_outlined, () => _openSettings(), Colors.white.withValues(alpha: 0.5)),
-                  const SizedBox(width: 4),
                   if (!Platform.isMacOS) ...[
+                    _titleBarBtn(Icons.settings_outlined, () => _openSettings(), Colors.white.withValues(alpha: 0.5)),
+                    const SizedBox(width: 4),
                     _titleBarBtn(Icons.remove_rounded, () => windowManager.minimize(), Colors.white.withValues(alpha: 0.5)),
                     const SizedBox(width: 4),
                     _titleBarBtn(Icons.close_rounded, () => windowManager.close(), const Color(0xFFE81123)),
@@ -268,8 +268,9 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildFooter(BuildContext context) {
     final state = widget.appState;
+    final bool isMac = !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
     return Padding(
-      padding: EdgeInsets.fromLTRB(36, 8, 36, isDesktop ? 20 : 16),
+      padding: EdgeInsets.fromLTRB(36, 8, 36, (isDesktop && !isMac) ? 20 : 16),
       child: Row(
         children: [
           Expanded(
@@ -289,7 +290,7 @@ class _HomePageState extends State<HomePage> {
                 fontFamily: 'monospace',
               ),
             ),
-          if (!isDesktop) ...[
+          if (!isDesktop || isMac) ...[
             const SizedBox(width: 8),
             IconButton(
               icon: Icon(Icons.settings_outlined, size: 18, color: Colors.white.withValues(alpha: 0.4)),

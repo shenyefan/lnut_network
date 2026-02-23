@@ -34,164 +34,170 @@ class SettingsSheet {
         final l10n = AppLocalizations.of(context)!;
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
+            final mediaQuery = MediaQuery.of(ctx);
             return Container(
+              constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.9),
+              clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
                 color: Color(0xFF1E2640),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 12),
-                        width: 36, height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(2),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          width: 36, height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
-                    ),
-                    // ── 开机自启 ──
-                    if (_isDesktop) ...[
+                      // ── 开机自启 ──
+                      if (_isDesktop) ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
+                          child: Text(
+                            l10n.settingsGeneral,
+                            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9)),
+                          ),
+                        ),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              final newVal = !localAutoStart;
+                              if (newVal) {
+                                await launchAtStartup.enable();
+                              } else {
+                                await launchAtStartup.disable();
+                              }
+                              localAutoStart = newVal;
+                              onAutoStartChanged(newVal);
+                              setSheetState(() {});
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(l10n.settingsAutoStart, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
+                                        const SizedBox(height: 2),
+                                        Text(l10n.settingsAutoStartDesc, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35))),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 24,
+                                    child: Switch(
+                                      value: localAutoStart,
+                                      activeThumbColor: const Color(0xFF5B8DEF),
+                                      onChanged: (v) async {
+                                        if (v) {
+                                          await launchAtStartup.enable();
+                                        } else {
+                                          await launchAtStartup.disable();
+                                        }
+                                        localAutoStart = v;
+                                        onAutoStartChanged(v);
+                                        setSheetState(() {});
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Divider(height: 1, color: Colors.white.withValues(alpha: 0.06), indent: 24, endIndent: 24),
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              final newVal = !localAutoCloseOnConnected;
+                              localAutoCloseOnConnected = newVal;
+                              onAutoCloseOnConnectedChanged(newVal);
+                              setSheetState(() {});
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(l10n.settingsAutoCloseOnConnected, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
+                                        const SizedBox(height: 2),
+                                        Text(l10n.settingsAutoCloseOnConnectedDesc, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35))),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 24,
+                                    child: Switch(
+                                      value: localAutoCloseOnConnected,
+                                      activeThumbColor: const Color(0xFF5B8DEF),
+                                      onChanged: (v) {
+                                        localAutoCloseOnConnected = v;
+                                        onAutoCloseOnConnectedChanged(v);
+                                        setSheetState(() {});
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Divider(height: 1, color: Colors.white.withValues(alpha: 0.06), indent: 24, endIndent: 24),
+                      ],
+                      // ── 网络接口选择 ──
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 4),
+                        padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
                         child: Text(
-                          l10n.settingsGeneral,
+                          l10n.settingsNetworkInterface,
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9)),
                         ),
                       ),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () async {
-                            final newVal = !localAutoStart;
-                            if (newVal) {
-                              await launchAtStartup.enable();
-                            } else {
-                              await launchAtStartup.disable();
-                            }
-                            localAutoStart = newVal;
-                            onAutoStartChanged(newVal);
-                            setSheetState(() {});
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(l10n.settingsAutoStart, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
-                                      const SizedBox(height: 2),
-                                      Text(l10n.settingsAutoStartDesc, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35))),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 24,
-                                  child: Switch(
-                                    value: localAutoStart,
-                                    activeThumbColor: const Color(0xFF5B8DEF),
-                                    onChanged: (v) async {
-                                      if (v) {
-                                        await launchAtStartup.enable();
-                                      } else {
-                                        await launchAtStartup.disable();
-                                      }
-                                      localAutoStart = v;
-                                      onAutoStartChanged(v);
-                                      setSheetState(() {});
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          l10n.settingsNetworkInterfaceDesc,
+                          style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.35)),
                         ),
                       ),
-                      Divider(height: 1, color: Colors.white.withValues(alpha: 0.06), indent: 24, endIndent: 24),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            final newVal = !localAutoCloseOnConnected;
-                            localAutoCloseOnConnected = newVal;
-                            onAutoCloseOnConnectedChanged(newVal);
-                            setSheetState(() {});
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(l10n.settingsAutoCloseOnConnected, style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.85))),
-                                      const SizedBox(height: 2),
-                                      Text(l10n.settingsAutoCloseOnConnectedDesc, style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35))),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: 24,
-                                  child: Switch(
-                                    value: localAutoCloseOnConnected,
-                                    activeThumbColor: const Color(0xFF5B8DEF),
-                                    onChanged: (v) {
-                                      localAutoCloseOnConnected = v;
-                                      onAutoCloseOnConnectedChanged(v);
-                                      setSheetState(() {});
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                      _buildItem(
+                        title: l10n.interfaceAutoDetect,
+                        subtitle: l10n.interfaceAutoDetectDesc,
+                        selected: appState.preferredInterface.isEmpty,
+                        onTap: () {
+                          appState.savePreferredInterface('');
+                          Navigator.pop(ctx);
+                        },
                       ),
-                      Divider(height: 1, color: Colors.white.withValues(alpha: 0.06), indent: 24, endIndent: 24),
+                      ...interfaces.entries.map((e) => _buildItem(
+                        title: e.key,
+                        subtitle: e.value.join(', '),
+                        selected: appState.preferredInterface == e.key,
+                        onTap: () {
+                          appState.savePreferredInterface(e.key);
+                          Navigator.pop(ctx);
+                        },
+                      )),
+                      const SizedBox(height: 20),
                     ],
-                    // ── 网络接口选择 ──
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 4),
-                      child: Text(
-                        l10n.settingsNetworkInterface,
-                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.9)),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        l10n.settingsNetworkInterfaceDesc,
-                        style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.35)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildItem(
-                      title: l10n.interfaceAutoDetect,
-                      subtitle: l10n.interfaceAutoDetectDesc,
-                      selected: appState.preferredInterface.isEmpty,
-                      onTap: () {
-                        appState.savePreferredInterface('');
-                        Navigator.pop(ctx);
-                      },
-                    ),
-                    ...interfaces.entries.map((e) => _buildItem(
-                      title: e.key,
-                      subtitle: e.value.join(', '),
-                      selected: appState.preferredInterface == e.key,
-                      onTap: () {
-                        appState.savePreferredInterface(e.key);
-                        Navigator.pop(ctx);
-                      },
-                    )),
-                    const SizedBox(height: 20),
-                  ],
+                  ),
                 ),
               ),
             );

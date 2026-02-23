@@ -10,16 +10,21 @@ import 'l10n/app_localizations.dart';
 import 'app/app_state.dart';
 import 'ui/home_page.dart';
 
-void main() async {
+const SystemUiOverlayStyle _darkSystemUiOverlayStyle = SystemUiOverlayStyle(
+  statusBarColor: Colors.transparent,
+  statusBarIconBrightness: Brightness.light,
+  statusBarBrightness: Brightness.dark,
+  systemNavigationBarColor: Colors.black,
+  systemNavigationBarIconBrightness: Brightness.light,
+  systemNavigationBarDividerColor: Colors.transparent,
+);
 
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    statusBarBrightness: Brightness.dark,
-    systemNavigationBarColor: Colors.black,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+  SystemChrome.setSystemUIOverlayStyle(_darkSystemUiOverlayStyle);
 
   final bool isDesktop = !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.windows ||
@@ -27,6 +32,7 @@ void main() async {
           defaultTargetPlatform == TargetPlatform.macOS);
 
   if (isDesktop) {
+    const fixedWindowSize = Size(400, 700);
     await windowManager.ensureInitialized();
 
     // 初始化开机自启动
@@ -37,13 +43,23 @@ void main() async {
     );
 
     WindowOptions windowOptions = const WindowOptions(
-      size: Size(400, 700),
+      size: fixedWindowSize,
       center: true,
+      minimumSize: fixedWindowSize,
+      maximumSize: fixedWindowSize,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
     );
     windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.setMinimumSize(fixedWindowSize);
+      await windowManager.setMaximumSize(fixedWindowSize);
+      await windowManager.setResizable(false);
+      await windowManager.setSize(fixedWindowSize);
+      if (Platform.isMacOS || Platform.isWindows) {
+        await windowManager.setMaximizable(false);
+      }
+      await windowManager.center();
       await windowManager.show();
       await windowManager.focus();
     });
@@ -69,7 +85,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _appState = AppState(); 
+    _appState = AppState();
   }
 
   @override
@@ -81,6 +97,12 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      builder: (context, child) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: _darkSystemUiOverlayStyle,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
