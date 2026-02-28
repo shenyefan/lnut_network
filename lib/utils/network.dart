@@ -12,6 +12,7 @@ class NetworkUtils {
     'https://connect.rom.miui.com/generate_204',
     'http://connect.rom.miui.com/generate_204',
   ];
+  static const _connectivityTimeout = Duration(seconds: 2);
 
   /// 获取所有可用网卡及其 IPv4 地址列表
   static Future<Map<String, List<String>>> getAllInterfaces() async {
@@ -66,26 +67,30 @@ class NetworkUtils {
   static Future<bool> isNetworkConnected() async {
     final client = http.Client();
     try {
-      for (final endpoint in _connectivityEndpoints) {
+      final checks = _connectivityEndpoints.map((endpoint) async {
         try {
           final uri = Uri.parse(endpoint);
-          final response = await client.get(uri).timeout(const Duration(seconds: 3));
-
-          if (response.statusCode >= 200 && response.statusCode < 400) {
-            return true;
+          final response = await client.get(uri).timeout(_connectivityTimeout);
+          final ok = response.statusCode >= 200 && response.statusCode < 400;
+          if (!ok) {
+            logger.w("连通性检测失败 [$endpoint]（${response.statusCode}）");
           }
-
-          logger.w("连通性检测失败 [$endpoint]（${response.statusCode}）");
+          return ok;
         } catch (e) {
           logger.w("连通性检测异常 [$endpoint]: $e");
           if (Platform.isMacOS && e.toString().contains('Operation not permitted')) {
             logger.w("macOS 沙盒可能缺少网络客户端权限（com.apple.security.network.client）");
           }
+          return false;
         }
-      }
+      });
 
-      logger.e("外网连通性测试全部失败");
-      return false;
+      final results = await Future.wait(checks);
+      final connected = results.any((ok) => ok);
+      if (!connected) {
+        logger.e("外网连通性测试全部失败");
+      }
+      return connected;
     } finally {
       client.close();
     }
@@ -103,19 +108,37 @@ class NetworkUtils {
           stdoutEncoding: systemEncoding,
           stderrEncoding: systemEncoding,
         );
-      } else {
-        // macOS / Linux / Android
+      } else if (Platform.isMacOS) {
+        // macOS: -W 单位是毫秒，-o 表示收到一个回复就退出
         result = await Process.run(
-          'ping', ['-c', '1', '-W', '$timeoutSeconds', targetIp],
+          'ping',
+          ['-c', '1', '-W', '${timeoutSeconds * 1000}', '-o', targetIp],
+          stdoutEncoding: systemEncoding,
+          stderrEncoding: systemEncoding,
+        );
+      } else {
+        // Linux / Android: -W 单位是秒
+        result = await Process.run(
+          'ping',
+          ['-c', '1', '-W', '$timeoutSeconds', targetIp],
+          stdoutEncoding: systemEncoding,
+          stderrEncoding: systemEncoding,
         );
       }
 
       final output = result.stdout.toString().toLowerCase();
-      if (result.exitCode == 0 && output.contains('ttl=')) {
+      if (result.exitCode == 0) {
         logger.i("Ping $targetIp 成功");
         return true;
       } else {
         logger.w("Ping $targetIp 失败 (exitCode=${result.exitCode})");
+        if (output.isNotEmpty) {
+          logger.w("Ping stdout: ${result.stdout}");
+        }
+        final err = result.stderr.toString();
+        if (err.isNotEmpty) {
+          logger.w("Ping stderr: $err");
+        }
         return false;
       }
     } catch (e) {

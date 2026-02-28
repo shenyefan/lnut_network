@@ -16,7 +16,6 @@ dependencies:
   http: ^1.6.0
   logger: ^2.6.2
   network_info_plus: ^7.0.0
-  tdesign_flutter: ^0.2.7
   window_manager: ^0.5.1
   launch_at_startup: ^0.5.1
   package_info_plus: ^9.0.0

@@ -34,6 +34,7 @@
   "loginSubtitle": "Login to connect to the Internet",
   "loginUsernameHint": "Student ID",
   "loginPasswordHint": "Password",
+  "loginRememberPassword": "Remember password",
   "loginAutoLogin": "Auto login",
   "loginButton": "Login",
   "loginButtonLoggingIn": "Logging in...",

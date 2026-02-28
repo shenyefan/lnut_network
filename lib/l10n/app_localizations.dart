@@ -266,6 +266,12 @@ abstract class AppLocalizations {
   /// **'密码'**
   String get loginPasswordHint;
 
+  /// No description provided for @loginRememberPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'记住密码'**
+  String get loginRememberPassword;
+
   /// No description provided for @loginAutoLogin.
   ///
   /// In zh, this message translates to:

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -43,6 +44,8 @@ class LoginManager {
       } else {
         return (false, recMessage);
       }
+    } on TimeoutException {
+      return (false, "errorLoginTimeout");
     } catch (e) {
       return (false, "$e");
     }
@@ -52,12 +55,14 @@ class LoginManager {
   Future<(bool, String)> logout() async {
     const url = "http://10.9.11.145/cgi-bin/wlogout.cgi";
     try {
-      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 1));
+      final response = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 3));
       if (response.statusCode == 200) {
         return (true, "success");
       } else {
         return (false, "errorLoggedOutFailed");
       }
+    } on TimeoutException {
+      return (false, "errorLogoutTimeout");
     } catch (e) {
       return (false, "$e");
     }

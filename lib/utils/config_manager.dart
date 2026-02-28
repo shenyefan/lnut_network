@@ -6,10 +6,7 @@ final logger = Logger();
 /// 由于 APP 未签名，使用该方法来临时避免 errSecMissingEntitlement (-34018).
 class _CompatMacOsOptions extends AppleOptions {
   const _CompatMacOsOptions({
-    super.accountName,
     super.groupId,
-    super.accessibility,
-    super.synchronizable,
     this.useDataProtectionKeyChain = false,
   });
 
@@ -30,28 +27,43 @@ class ConfigManager {
   /// 加载保存的凭证和状态
   Future<Map<String, dynamic>> loadCredentials() async {
     final username = await _storage.read(key: 'username') ?? '';
-    final password = await _storage.read(key: 'password') ?? '';
+    final storedPassword = await _storage.read(key: 'password') ?? '';
+    final rememberPasswordStr = await _storage.read(key: 'rememberPassword');
+    final rememberPassword =
+        rememberPasswordStr == null ? storedPassword.isNotEmpty : rememberPasswordStr == 'true';
     final autoLoginStr = await _storage.read(key: 'autoLogin') ?? 'false';
-    final autoLogin = autoLoginStr == 'true';
+    final autoLogin = rememberPassword && autoLoginStr == 'true';
     final autoCloseOnConnectedStr = await _storage.read(key: 'autoCloseOnConnected') ?? 'false';
     final autoCloseOnConnected = autoCloseOnConnectedStr == 'true';
     final preferredInterface = await _storage.read(key: 'preferredInterface') ?? '';
 
     return {
       'username': username,
-      'password': password,
+      'password': rememberPassword ? storedPassword : '',
+      'rememberPassword': rememberPassword,
       'autoLogin': autoLogin,
       'autoCloseOnConnected': autoCloseOnConnected,
       'preferredInterface': preferredInterface,
     };
   }
 
-  /// 保存用户名、密码和自动登录状态
-  Future<void> saveCredentials(String username, String password, bool autoLogin) async {
+  /// 保存用户名、密码、记住密码和自动登录状态
+  Future<void> saveCredentials(
+    String username,
+    String password,
+    bool rememberPassword,
+    bool autoLogin,
+  ) async {
+    final effectiveAutoLogin = rememberPassword && autoLogin;
     await _storage.write(key: 'username', value: username);
-    await _storage.write(key: 'password', value: password);
-    await _storage.write(key: 'autoLogin', value: autoLogin ? 'true' : 'false');
-    logger.i("已保存用户名: $username, 自动登录状态: $autoLogin");
+    if (rememberPassword) {
+      await _storage.write(key: 'password', value: password);
+    } else {
+      await _storage.delete(key: 'password');
+    }
+    await _storage.write(key: 'rememberPassword', value: rememberPassword ? 'true' : 'false');
+    await _storage.write(key: 'autoLogin', value: effectiveAutoLogin ? 'true' : 'false');
+    logger.i("已保存用户名: $username, 记住密码: $rememberPassword, 自动登录: $effectiveAutoLogin");
   }
 
   /// 保存用户首选的网卡名称

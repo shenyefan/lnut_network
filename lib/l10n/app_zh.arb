@@ -34,6 +34,7 @@
   "loginSubtitle": "登录以连接互联网",
   "loginUsernameHint": "学号",
   "loginPasswordHint": "密码",
+  "loginRememberPassword": "记住密码",
   "loginAutoLogin": "自动登录",
   "loginButton": "登 录",
   "loginButtonLoggingIn": "登录中...",

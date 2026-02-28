@@ -17,6 +17,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final _usernameCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  bool _rememberPassword = false;
   bool _autoLogin = false;
   bool _obscure = true;
   String _localError = '';
@@ -33,6 +34,7 @@ class _LoginViewState extends State<LoginView> {
       setState(() {
         _usernameCtrl.text = widget.appState.savedUsername;
         _passwordCtrl.text = widget.appState.savedPassword;
+        _rememberPassword = widget.appState.isRememberPassword;
         _autoLogin = widget.appState.isAutoLogin;
       });
     }
@@ -56,7 +58,12 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
     setState(() => _localError = '');
-    state.login(u, p, autoLogin: _autoLogin);
+    state.login(
+      u,
+      p,
+      rememberPassword: _rememberPassword,
+      autoLogin: _autoLogin,
+    );
   }
 
   /// 统一的错误信息：优先显示本地校验错误，其次显示 AppState 的 errorMessage
@@ -73,6 +80,9 @@ class _LoginViewState extends State<LoginView> {
     if (code.isEmpty) return '';
     final l10n = AppLocalizations.of(context)!;
     switch (code) {
+      case 'errorConnecting': return l10n.errorConnecting;
+      case 'errorLoginTimeout': return l10n.errorConnecting;
+      case 'errorLogoutTimeout': return l10n.errorLoggedOutFailed;
       case 'errorPingTestFailed': return l10n.errorPingTestFailed;
       case 'errorInvalidParams': return l10n.errorInvalidParams;
       case 'errorAccountNotFound': return l10n.errorAccountNotFound;
@@ -152,32 +162,38 @@ class _LoginViewState extends State<LoginView> {
         ),
         const SizedBox(height: 16),
 
-        GestureDetector(
-          onTap: () => setState(() => _autoLogin = !_autoLogin),
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 18, height: 18,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(5),
-                  color: _autoLogin ? const Color(0xFF5B8DEF) : Colors.transparent,
-                  border: Border.all(
-                    color: _autoLogin ? const Color(0xFF5B8DEF) : Colors.white.withValues(alpha: 0.25),
-                    width: 1.5,
-                  ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildCheckboxOption(
+                checked: _rememberPassword,
+                label: l10n.loginRememberPassword,
+                onTap: () => setState(() {
+                  _rememberPassword = !_rememberPassword;
+                  if (!_rememberPassword) {
+                    _autoLogin = false;
+                  }
+                }),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: _buildCheckboxOption(
+                  checked: _autoLogin,
+                  label: l10n.loginAutoLogin,
+                  onTap: () => setState(() {
+                    final next = !_autoLogin;
+                    _autoLogin = next;
+                    if (next) {
+                      _rememberPassword = true;
+                    }
+                  }),
                 ),
-                child: _autoLogin
-                    ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
-                    : null,
               ),
-              const SizedBox(width: 10),
-              Text(
-                l10n.loginAutoLogin,
-                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.45)),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
         const SizedBox(height: 32),
 
@@ -207,6 +223,45 @@ class _LoginViewState extends State<LoginView> {
             child: Text(
               text,
               style: TextStyle(fontSize: 12, color: const Color(0xFFF87171).withValues(alpha: 0.9)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckboxOption({
+    required bool checked,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              color: checked ? const Color(0xFF5B8DEF) : Colors.transparent,
+              border: Border.all(
+                color: checked ? const Color(0xFF5B8DEF) : Colors.white.withValues(alpha: 0.25),
+                width: 1.5,
+              ),
+            ),
+            child: checked ? const Icon(Icons.check_rounded, size: 14, color: Colors.white) : null,
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.45)),
             ),
           ),
         ],

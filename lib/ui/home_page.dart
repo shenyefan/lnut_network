@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: Text(
               _getTranslatedStatusMin(context, state),
-              style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35)),
+              style: TextStyle(fontSize: 12, color: Colors.white.withValues(alpha: 0.35)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -285,10 +285,11 @@ class _HomePageState extends State<HomePage> {
             Text(
               state.currentIp,
               style: TextStyle(
-                fontSize: 10,
-                color: Colors.white.withValues(alpha: 0.2),
-                fontFamily: 'monospace',
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.35),
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           if (!isDesktop || isMac) ...[
             const SizedBox(width: 8),
@@ -398,6 +399,9 @@ class _HomePageState extends State<HomePage> {
   String _getTranslatedError(BuildContext context, String code) {
     final l10n = AppLocalizations.of(context)!;
     switch (code) {
+      case 'errorConnecting': return l10n.errorConnecting;
+      case 'errorLoginTimeout': return l10n.errorConnecting;
+      case 'errorLogoutTimeout': return l10n.errorLoggedOutFailed;
       case 'errorPingTestFailed': return l10n.errorPingTestFailed;
       case 'errorInvalidParams': return l10n.errorInvalidParams;
       case 'errorAccountNotFound': return l10n.errorAccountNotFound;

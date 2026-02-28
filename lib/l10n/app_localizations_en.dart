@@ -96,6 +96,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginPasswordHint => 'Password';
 
   @override
+  String get loginRememberPassword => 'Remember password';
+
+  @override
   String get loginAutoLogin => 'Auto login';
 
   @override

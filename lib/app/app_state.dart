@@ -23,6 +23,7 @@ class AppState extends ChangeNotifier {
   
   String savedUsername = '';
   String savedPassword = '';
+  bool isRememberPassword = false;
   bool isAutoLogin = false;
   bool autoCloseOnConnected = false;
   String preferredInterface = '';
@@ -36,24 +37,32 @@ class AppState extends ChangeNotifier {
 
   Future<void> _init() async {
     await loadConfig();
-    await checkNetworkStatus();
+    await checkNetworkStatus(allowAutoLogin: true);
   }
 
   Future<void> loadConfig() async {
     final credentials = await _configManager.loadCredentials();
     savedUsername = credentials['username'] ?? '';
     savedPassword = credentials['password'] ?? '';
+    isRememberPassword = credentials['rememberPassword'] ?? false;
     isAutoLogin = credentials['autoLogin'] ?? false;
     autoCloseOnConnected = credentials['autoCloseOnConnected'] ?? false;
     preferredInterface = credentials['preferredInterface'] ?? '';
     notifyListeners();
   }
 
-  Future<void> saveConfig(String username, String password, bool autoLogin) async {
+  Future<void> saveConfig(
+    String username,
+    String password,
+    bool rememberPassword,
+    bool autoLogin,
+  ) async {
+    final effectiveAutoLogin = rememberPassword && autoLogin;
     savedUsername = username;
-    savedPassword = password;
-    isAutoLogin = autoLogin;
-    await _configManager.saveCredentials(username, password, autoLogin);
+    savedPassword = rememberPassword ? password : '';
+    isRememberPassword = rememberPassword;
+    isAutoLogin = effectiveAutoLogin;
+    await _configManager.saveCredentials(username, password, rememberPassword, effectiveAutoLogin);
     notifyListeners();
   }
   
@@ -70,15 +79,15 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> checkNetworkStatus() async {
+  Future<void> checkNetworkStatus({bool allowAutoLogin = false}) async {
     status = AppNetworkStatus.checking;
     errorMessage = '';
     notifyListeners();
 
-    currentIp = await NetworkUtils.getIpAddress(preferredInterface: preferredInterface) ?? '';
-    
-    bool isConnected = await NetworkUtils.isNetworkConnected();
-    bool isCampus = await NetworkUtils.pingTest('10.9.18.71', timeoutSeconds: 2);
+    final probe = await _probeNetwork();
+    currentIp = probe.ip;
+    final isConnected = probe.isConnected;
+    final isCampus = probe.isCampus;
 
     if (isConnected && isCampus) {
       status = AppNetworkStatus.connectedCampus;
@@ -86,9 +95,14 @@ class AppState extends ChangeNotifier {
       status = AppNetworkStatus.connectedExternal;
     } else if (!isConnected && isCampus) {
       status = AppNetworkStatus.campusNetwork;
-      if (isAutoLogin && savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
+      if (allowAutoLogin && isAutoLogin && savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
         notifyListeners();
-        await login(savedUsername, savedPassword, autoLogin: true);
+        await login(
+          savedUsername,
+          savedPassword,
+          rememberPassword: isRememberPassword,
+          autoLogin: true,
+        );
         return;
       }
     } else {
@@ -97,7 +111,64 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login(String username, String password, {bool autoLogin = false}) async {
+  Future<({String ip, bool isConnected, bool isCampus})> _probeNetwork() async {
+    final ipFuture = NetworkUtils.getIpAddress(preferredInterface: preferredInterface);
+    final isConnectedFuture = NetworkUtils.isNetworkConnected();
+    final isCampusFuture = NetworkUtils.pingTest('10.9.18.71', timeoutSeconds: 2);
+
+    final results = await Future.wait<dynamic>([
+      ipFuture,
+      isConnectedFuture,
+      isCampusFuture,
+    ]);
+
+    return (
+      ip: (results[0] as String?) ?? '',
+      isConnected: results[1] as bool,
+      isCampus: results[2] as bool,
+    );
+  }
+
+  Future<bool> _postLoginVerifyStatus() async {
+    // 登录成功后给网关一点时间同步路由，再做状态复检，减少误判。
+    await Future.delayed(const Duration(milliseconds: 350));
+    var probe = await _probeNetwork();
+    currentIp = probe.ip;
+    var isConnected = probe.isConnected;
+    var isCampus = probe.isCampus;
+
+    if (!isConnected && isCampus) {
+      await Future.delayed(const Duration(milliseconds: 700));
+      probe = await _probeNetwork();
+      currentIp = probe.ip;
+      isConnected = probe.isConnected;
+      isCampus = probe.isCampus;
+    }
+
+    if (isConnected && isCampus) {
+      status = AppNetworkStatus.connectedCampus;
+      return true;
+    }
+    if (isConnected && !isCampus) {
+      status = AppNetworkStatus.connectedExternal;
+      return true;
+    }
+    if (!isConnected && isCampus) {
+      status = AppNetworkStatus.campusNetwork;
+      errorMessage = 'errorPingTestFailed';
+      return false;
+    }
+    status = AppNetworkStatus.noNetwork;
+    errorMessage = 'errorPingTestFailed';
+    return false;
+  }
+
+  Future<void> login(
+    String username,
+    String password, {
+    bool rememberPassword = false,
+    bool autoLogin = false,
+  }) async {
     if (status != AppNetworkStatus.campusNetwork && status != AppNetworkStatus.loginFailed) return;
     
     isLoggingIn = true;
@@ -113,14 +184,16 @@ class AppState extends ChangeNotifier {
     isLoggingIn = false;
     if (success) {
       notifyListeners();
-      await saveConfig(username, password, autoLogin);
-      
-      bool isConnected = await NetworkUtils.isNetworkConnected();
-      if (isConnected) {
-        status = AppNetworkStatus.connectedCampus;
+      await saveConfig(username, password, rememberPassword, autoLogin);
+      await _postLoginVerifyStatus();
+    } else if (msg == 'errorLoginTimeout') {
+      // 服务端可能已处理登录请求，但客户端等待响应超时，先复检网络状态。
+      final verified = await _postLoginVerifyStatus();
+      if (verified) {
+        await saveConfig(username, password, rememberPassword, autoLogin);
       } else {
-        status = AppNetworkStatus.connectedCampus;
-        errorMessage = 'errorPingTestFailed';
+        status = AppNetworkStatus.loginFailed;
+        errorMessage = 'errorConnecting';
       }
     } else {
       status = AppNetworkStatus.loginFailed;
@@ -138,6 +211,14 @@ class AppState extends ChangeNotifier {
     isLoggingOut = false;
     if (success) {
       await checkNetworkStatus();
+    } else if (msg == 'errorLogoutTimeout') {
+      // 服务端可能已处理下线请求，但客户端等待响应超时，先复检状态。
+      await Future.delayed(const Duration(milliseconds: 500));
+      await checkNetworkStatus();
+      if (status == AppNetworkStatus.connectedCampus) {
+        errorMessage = 'errorLoggedOutFailed';
+        notifyListeners();
+      }
     } else {
       errorMessage = msg;
       notifyListeners();
