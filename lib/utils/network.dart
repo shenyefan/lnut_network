@@ -116,8 +116,16 @@ class NetworkUtils {
           stdoutEncoding: systemEncoding,
           stderrEncoding: systemEncoding,
         );
+      } else if (Platform.isAndroid || Platform.isIOS) {
+        // 移动端：使用小写的 -w 作为 deadline 超时参数
+        result = await Process.run(
+          'ping',
+          ['-c', '1', '-w', '$timeoutSeconds', targetIp],
+          stdoutEncoding: systemEncoding,
+          stderrEncoding: systemEncoding,
+        );
       } else {
-        // Linux / Android: -W 单位是秒
+        // Linux 等其他平台: -W 单位是秒
         result = await Process.run(
           'ping',
           ['-c', '1', '-W', '$timeoutSeconds', targetIp],
