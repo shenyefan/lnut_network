@@ -64,7 +64,7 @@ class NetworkUtils {
   }
 
   /// 204 测试
-  static Future<bool> isNetworkConnected() async {
+  static Future<bool> isNetworkConnected({required String sourceIp}) async {
     final client = http.Client();
     try {
       final checks = _connectivityEndpoints.map((endpoint) async {
