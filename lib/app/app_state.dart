@@ -112,20 +112,20 @@ class AppState extends ChangeNotifier {
   }
 
   Future<({String ip, bool isConnected, bool isCampus})> _probeNetwork() async {
-    final ipFuture = NetworkUtils.getIpAddress(preferredInterface: preferredInterface);
-    final isConnectedFuture = NetworkUtils.isNetworkConnected();
-    final isCampusFuture = NetworkUtils.pingTest('10.9.18.71', timeoutSeconds: 2);
+    final ip = await NetworkUtils.getIpAddress(preferredInterface: preferredInterface) ?? '';
+
+    final isConnectedFuture = NetworkUtils.isNetworkConnected(sourceIp: ip);
+    final isCampusFuture = NetworkUtils.pingTest('10.9.18.71', timeoutSeconds: 2, sourceIp: ip);
 
     final results = await Future.wait<dynamic>([
-      ipFuture,
       isConnectedFuture,
       isCampusFuture,
     ]);
 
     return (
-      ip: (results[0] as String?) ?? '',
-      isConnected: results[1] as bool,
-      isCampus: results[2] as bool,
+      ip: ip,
+      isConnected: results[0] as bool,
+      isCampus: results[1] as bool,
     );
   }
 

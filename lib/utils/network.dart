@@ -63,8 +63,18 @@ class NetworkUtils {
     }
   }
 
-  /// 204 测试
-  static Future<bool> isNetworkConnected() async {
+  /// 外网连通性测试（针对移动端采用带源 IP 绑定的 Ping 测试以避免流量网关干扰，其余端仍用 HTTP 204）
+  static Future<bool> isNetworkConnected({String? sourceIp}) async {
+    // 移动端由于可能受到蜂窝流量默认网关干扰，如果有指定的 wlan IP，我们使用 Ping 强制走该网卡检测外网
+    if (sourceIp != null && sourceIp.isNotEmpty && (Platform.isAndroid || Platform.isIOS)) {
+      final success = await pingTest('223.5.5.5', timeoutSeconds: 2, sourceIp: sourceIp) || 
+                      await pingTest('114.114.114.114', timeoutSeconds: 2, sourceIp: sourceIp);
+      if (!success) {
+        logger.w("基于源 IP [$sourceIp] 的 Ping 外网测试失败");
+      }
+      return success;
+    }
+
     final client = http.Client();
     try {
       final checks = _connectivityEndpoints.map((endpoint) async {
@@ -96,15 +106,24 @@ class NetworkUtils {
     }
   }
 
-  /// 校园网检测 
-  static Future<bool> pingTest(String targetIp, {int timeoutSeconds = 2}) async {
+  /// 校园网检测（支持源 IP 绑定，可强制规避蜂窝端错误路由） 
+  static Future<bool> pingTest(String targetIp, {int timeoutSeconds = 2, String? sourceIp}) async {
     try {
       ProcessResult result;
+      List<String> bindArgs = [];
+
+      if (sourceIp != null && sourceIp.isNotEmpty) {
+        if (Platform.isWindows || Platform.isMacOS) {
+          bindArgs = ['-S', sourceIp];
+        } else {
+          bindArgs = ['-I', sourceIp];
+        }
+      }
 
       if (Platform.isWindows) {
         // Windows
         result = await Process.run(
-          'ping', ['-n', '1', '-w', '${timeoutSeconds * 1000}', targetIp],
+          'ping', ['-n', '1', '-w', '${timeoutSeconds * 1000}', ...bindArgs, targetIp],
           stdoutEncoding: systemEncoding,
           stderrEncoding: systemEncoding,
         );
@@ -112,7 +131,7 @@ class NetworkUtils {
         // macOS: -W 单位是毫秒，-o 表示收到一个回复就退出
         result = await Process.run(
           'ping',
-          ['-c', '1', '-W', '${timeoutSeconds * 1000}', '-o', targetIp],
+          ['-c', '1', '-W', '${timeoutSeconds * 1000}', '-o', ...bindArgs, targetIp],
           stdoutEncoding: systemEncoding,
           stderrEncoding: systemEncoding,
         );
@@ -120,7 +139,7 @@ class NetworkUtils {
         // 移动端：使用小写的 -w 作为 deadline 超时参数
         result = await Process.run(
           'ping',
-          ['-c', '1', '-w', '$timeoutSeconds', targetIp],
+          ['-c', '1', '-w', '$timeoutSeconds', ...bindArgs, targetIp],
           stdoutEncoding: systemEncoding,
           stderrEncoding: systemEncoding,
         );
@@ -128,7 +147,7 @@ class NetworkUtils {
         // Linux 等其他平台: -W 单位是秒
         result = await Process.run(
           'ping',
-          ['-c', '1', '-W', '$timeoutSeconds', targetIp],
+          ['-c', '1', '-W', '$timeoutSeconds', ...bindArgs, targetIp],
           stdoutEncoding: systemEncoding,
           stderrEncoding: systemEncoding,
         );
