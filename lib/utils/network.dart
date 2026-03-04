@@ -63,18 +63,8 @@ class NetworkUtils {
     }
   }
 
-  /// 外网连通性测试（针对移动端采用带源 IP 绑定的 Ping 测试以避免流量网关干扰，其余端仍用 HTTP 204）
-  static Future<bool> isNetworkConnected({String? sourceIp}) async {
-    // 移动端由于可能受到蜂窝流量默认网关干扰，如果有指定的 wlan IP，我们使用 Ping 强制走该网卡检测外网
-    if (sourceIp != null && sourceIp.isNotEmpty && (Platform.isAndroid || Platform.isIOS)) {
-      final success = await pingTest('223.5.5.5', timeoutSeconds: 2, sourceIp: sourceIp) || 
-                      await pingTest('114.114.114.114', timeoutSeconds: 2, sourceIp: sourceIp);
-      if (!success) {
-        logger.w("基于源 IP [$sourceIp] 的 Ping 外网测试失败");
-      }
-      return success;
-    }
-
+  /// 204 测试
+  static Future<bool> isNetworkConnected() async {
     final client = http.Client();
     try {
       final checks = _connectivityEndpoints.map((endpoint) async {
