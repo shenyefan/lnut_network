@@ -143,6 +143,7 @@ class _LoginViewState extends State<LoginView> {
           controller: _usernameCtrl,
           hint: l10n.loginUsernameHint,
           icon: Icons.person_outline_rounded,
+          enabled: !state.isLoggingIn,
         ),
         const SizedBox(height: 14),
 
@@ -151,8 +152,9 @@ class _LoginViewState extends State<LoginView> {
           hint: l10n.loginPasswordHint,
           icon: Icons.lock_outline_rounded,
           obscure: _obscure,
+          enabled: !state.isLoggingIn,
           suffixIcon: GestureDetector(
-            onTap: () => setState(() => _obscure = !_obscure),
+            onTap: state.isLoggingIn ? null : () => setState(() => _obscure = !_obscure),
             child: Icon(
               _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
               size: 18,
@@ -168,6 +170,7 @@ class _LoginViewState extends State<LoginView> {
               child: _buildCheckboxOption(
                 checked: _rememberPassword,
                 label: l10n.loginRememberPassword,
+                disabled: state.isLoggingIn,
                 onTap: () => setState(() {
                   _rememberPassword = !_rememberPassword;
                   if (!_rememberPassword) {
@@ -183,6 +186,7 @@ class _LoginViewState extends State<LoginView> {
                 child: _buildCheckboxOption(
                   checked: _autoLogin,
                   label: l10n.loginAutoLogin,
+                  disabled: state.isLoggingIn,
                   onTap: () => setState(() {
                     final next = !_autoLogin;
                     _autoLogin = next;
@@ -234,37 +238,41 @@ class _LoginViewState extends State<LoginView> {
     required bool checked,
     required String label,
     required VoidCallback onTap,
+    bool disabled = false,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: disabled ? null : onTap,
       behavior: HitTestBehavior.opaque,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(5),
-              color: checked ? const Color(0xFF5B8DEF) : Colors.transparent,
-              border: Border.all(
-                color: checked ? const Color(0xFF5B8DEF) : Colors.white.withValues(alpha: 0.25),
-                width: 1.5,
+      child: Opacity(
+        opacity: disabled ? 0.5 : 1.0,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: checked ? const Color(0xFF5B8DEF) : Colors.transparent,
+                border: Border.all(
+                  color: checked ? const Color(0xFF5B8DEF) : Colors.white.withValues(alpha: 0.25),
+                  width: 1.5,
+                ),
+              ),
+              child: checked ? const Icon(Icons.check_rounded, size: 14, color: Colors.white) : null,
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.45)),
               ),
             ),
-            child: checked ? const Icon(Icons.check_rounded, size: 14, color: Colors.white) : null,
-          ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.45)),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

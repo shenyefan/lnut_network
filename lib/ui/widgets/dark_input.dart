@@ -6,6 +6,7 @@ class DarkInput extends StatelessWidget {
   final IconData icon;
   final bool obscure;
   final Widget? suffixIcon;
+  final bool enabled;
 
   const DarkInput({
     super.key,
@@ -14,6 +15,7 @@ class DarkInput extends StatelessWidget {
     required this.icon,
     this.obscure = false,
     this.suffixIcon,
+    this.enabled = true,
   });
 
   @override
@@ -27,12 +29,23 @@ class DarkInput extends StatelessWidget {
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(fontSize: 15, color: Colors.white),
+        enabled: enabled,
+        style: TextStyle(
+          fontSize: 15,
+          color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.5),
+        ),
         cursorColor: const Color(0xFF5B8DEF),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25), fontSize: 14),
-          prefixIcon: Icon(icon, size: 20, color: Colors.white.withValues(alpha: 0.3)),
+          hintStyle: TextStyle(
+            color: enabled ? Colors.white.withValues(alpha: 0.25) : Colors.white.withValues(alpha: 0.15),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(
+            icon,
+            size: 20,
+            color: enabled ? Colors.white.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.15),
+          ),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

@@ -181,9 +181,7 @@ class AppState extends ChangeNotifier {
 
     final (success, msg) = await _loginManager.login(username, password, currentIp);
     
-    isLoggingIn = false;
     if (success) {
-      notifyListeners();
       await saveConfig(username, password, rememberPassword, autoLogin);
       await _postLoginVerifyStatus();
     } else if (msg == 'errorLoginTimeout') {
@@ -199,6 +197,8 @@ class AppState extends ChangeNotifier {
       status = AppNetworkStatus.loginFailed;
       errorMessage = msg;
     }
+    
+    isLoggingIn = false;
     notifyListeners();
   }
 
